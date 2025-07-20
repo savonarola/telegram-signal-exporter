@@ -87,18 +87,22 @@ async def run(args, download_dir):
     ]
     print(f"Downloading stickers...")
 
-    downloaded_stickers = {}
+    downloaded_stickers = []
     for task in tqdm.tqdm(tasks):
         emoji, file_name = await task
-        downloaded_stickers[emoji] = file_name
+        downloaded_stickers.append((emoji, file_name))
 
     ## Download cover
-    cover_file = await bot.get_file(sticker_set.thumbnail.file_id)
-    cover_file_url = cover_file.file_path
-    cover_file_ext = cover_file_url.split(".")[-1]
-    cover_file_name = f"cover.{cover_file_ext}"
-    cover_save_file_path = os.path.join(download_dir, cover_file_name)
-    await cover_file.download_to_drive(cover_save_file_path)
+    if sticker_set.thumbnail:
+        cover_file = await bot.get_file(sticker_set.thumbnail.file_id)
+        cover_file_url = cover_file.file_path
+        cover_file_ext = cover_file_url.split(".")[-1]
+        cover_file_name = f"cover.{cover_file_ext}"
+        cover_save_file_path = os.path.join(download_dir, cover_file_name)
+        await cover_file.download_to_drive(cover_save_file_path)
+    else:
+        _, first_file_name = downloaded_stickers[0]
+        cover_file_name = first_file_name
 
     ## Create manifest.json
     manifest = {
@@ -112,14 +116,14 @@ async def run(args, download_dir):
                 "emoji": emoji,
                 "file": file_name,
             }
-            for emoji, file_name in downloaded_stickers.items()
+            for emoji, file_name in downloaded_stickers
         ],
     }
 
     print(f"Creating zip file {args.output}...")
 
     with ZipFile(args.output, "w") as zip_file:
-        for _, file_name in tqdm.tqdm(downloaded_stickers.items()):
+        for _, file_name in tqdm.tqdm(downloaded_stickers):
             zip_file.write(os.path.join(download_dir, file_name), file_name)
         zip_file.write(os.path.join(download_dir, cover_file_name), cover_file_name)
         zip_file.writestr("manifest.json", json.dumps(manifest))
