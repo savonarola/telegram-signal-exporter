@@ -1,0 +1,12 @@
+[project]
+name = "tg-sg-stickers"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dotenv>=0.9.9",
+    "httpx>=0.28.1",
+    "python-telegram-bot>=22.2",
+    "tqdm>=4.67.1",
+]
